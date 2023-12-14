@@ -18,7 +18,7 @@ def play_audio(file_path):
     while True:
         current_size = os.path.getsize(file_path)
         if current_size == previous_size:
-            break  # Exit the loop if file size hasn't changed
+            break 
         previous_size = current_size
 
         audio_segment = AudioSegment.from_mp3(file_path)
