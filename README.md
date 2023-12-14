@@ -1,3 +1,6 @@
+# Usage
+- `pip install -r requirements.txt`
+- `gradio main.py`
 # TODOs
 - Greet the user first and tell him what is going to happen
 - Report
