@@ -26,10 +26,18 @@ checker_template = """
 You are a intelligent code interpreter, you check the validity of user's response according to the question asked and rate the response in 0-10.
 where 0 means very poor and 10 is absolutely correct.
 
-Analyze the following user response as per the asked question and only give rating from 0-10 (Integer) as response, nothing else.
+Analyze the following user response as per the asked question and the feedback given by the interviewer and only give rating from 0-10 (Integer) as response, nothing else.
+Response Accuracy Check:
+    1. Evaluate the accuracy of the LLM’s feedback to the user’s response.
+    2. Identify mistakes or inaccuracies in the LLM’s feedback.
+    3. If mistakes are found, assign an error score: give Error Score (1-10): Higher score for more substantial mistakes.
+Error Score Determination:
+    1. Combine alignment and accuracy issues to determine the overall error score.
+    2. Error Score (1-10): Based on the severity and number of alignment and accuracy issues.
 
 question = {ques}
-user_response = {response}
+user_response = {user_response}
+interviewer_feedback = {interviewer_response}
 """
 checker_prompt = ChatPromptTemplate.from_template(checker_template)
 def init_conversation():
@@ -92,12 +100,29 @@ def play_audio(file_path):
         play_obj.wait_done()
         time.sleep(0.5)
 
+"""
+question asked,
+user response,
+interviewer_response
+"""
 
+i = 0
+question_asked = None
 def main(user_input):
+    global i
+    global question_asked
     interview_conversation = init_conversation()
-    # threading.Thread(target=play_audio, args=(temp_file.name,))
-    # checker_convo = init_conversation()
     ai_response = interview_conversation.predict(input=user_input)
+    if i%2:
+        checker_mes = checker_prompt.format_messages(ques=question_asked,
+                                user_response=user_input,
+                                interviewer_response=ai_response)
+        marks = checker(checker_mes)
+        grades.append(marks)
+        print("Interviewer Performance: ", marks.content)
+    else:
+        question_asked = ai_response
+
 
     response = client.audio.speech.create(
         model="tts-1",
@@ -111,12 +136,15 @@ def main(user_input):
         playback_thread = threading.Thread(target=play_audio, args=(temp_file.name,))
         playback_thread.start()
         playback_thread.join()
+    i += 1
 
     return ai_response
 
 
 if __name__ == '__main__':
     with gr.Blocks() as app:
+        with gr.Row():
+            gr.Markdown("<center><h1> AI Mock Interview </h1><center>")
         with gr.Row():
             with gr.Column():
                 audio_input = gr.Audio(sources=["microphone"], type="filepath", label="Record Audio")
@@ -134,5 +162,6 @@ if __name__ == '__main__':
 
         submit_button.click(fn=append_text, inputs=[normal_text, code_input],
                             outputs=[final_output])
+        finish_button.click(fn=lambda : print(sum([int(i.strip()) for i in grades])))
 
     app.launch()
