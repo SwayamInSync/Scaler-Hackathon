@@ -1,6 +1,10 @@
 # Usage
 - `pip install -r requirements.txt`
-- `gradio main.py`
+- `python main2.py`
+## Instructions while using
+- First provide the JD and click submit
+- Interact as much as you can
+- As done with interview, click on finish interview
 # TODOs
 - Greet the user first and tell him what is going to happen
 - Report
